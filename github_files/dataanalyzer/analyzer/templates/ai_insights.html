@@ -1,0 +1,370 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Insights — {{ dataset.name }} | AI Data Analyzer</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+  .insights-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a8a 100%);
+    border-radius: 16px;
+    padding: 32px 36px;
+    margin-bottom: 28px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.18);
+  }
+  .insights-hero h1 {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .insights-hero p {
+    color: #94a3b8;
+    font-size: 14px;
+  }
+  .insights-hero p strong { color: #60a5fa; }
+
+  /* ── DOMAIN SUMMARY CARD ── */
+  .domain-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .domain-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #2563eb;
+    margin-bottom: 6px;
+  }
+  .domain-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+  .domain-desc {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+  .domain-question {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: #1e40af;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── DATA QUALITY SECTION ── */
+  .dq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .dq-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  }
+  .dq-severity {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+  .dq-severity-high { background: #fee2e2; color: #991b1b; }
+  .dq-severity-medium { background: #fef3c7; color: #92400e; }
+  .dq-severity-low { background: #e0f2fe; color: #075985; }
+
+  /* ── INSIGHTS CARDS ── */
+  .insight-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+    border-color: #cbd5e1;
+  }
+  .insight-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .insight-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+  .badge-trend { background: #dbeafe; color: #1e40af; }
+  .badge-comparison { background: #fef3c7; color: #92400e; }
+  .badge-correlation { background: #e0e7ff; color: #3730a3; }
+  .badge-outlier { background: #fee2e2; color: #991b1b; }
+  .badge-recommendation { background: #dcfce7; color: #166534; }
+  .badge-quality { background: #f1f5f9; color: #475569; }
+
+  .insight-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  .insight-detail {
+    font-size: 13.5px;
+    color: #475569;
+    line-height: 1.55;
+    margin: 8px 0 12px;
+  }
+  .insight-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 11.5px;
+    color: #64748b;
+  }
+  .col-pill {
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #334155;
+  }
+
+  /* ── SUGGESTED QUESTIONS ── */
+  .followups-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin-top: 28px;
+  }
+  .followups-card h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .chips-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .question-chip {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13.5px;
+    color: #1e40af;
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s;
+  }
+  .question-chip:hover {
+    background: #eff6ff;
+    border-color: #93c5fa;
+    color: #1d4ed8;
+    transform: translateX(4px);
+  }
+</style>
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DataAnalyzer">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192.png' %}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">🤖 AI Data Analyzer</div>
+  <div class="nav-links">
+    <button type="button" class="pwa-install-btn" id="pwaInstallBtn" title="Install as App">📲 Install App</button>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <a href="{% url 'upload_dataset' %}">Upload</a>
+    <form method="POST" action="{% url 'logout' %}" style="display:inline;">{% csrf_token %}<button type="submit">Logout</button></form>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-mobile" id="navMobile">
+  <button type="button" class="pwa-install-btn mobile-pwa-btn" id="pwaInstallMobileBtn">📲 Install App</button>
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  <a href="{% url 'upload_dataset' %}">Upload</a>
+  <form method="POST" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Logout</button></form>
+</div>
+
+<div class="page-wrapper">
+  <div class="breadcrumb">
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <span>/</span>
+    {% if dataset %}
+    <a href="{% url 'dataset_details' dataset.id %}">{{ dataset.name }}</a>
+    <span>/</span>
+    {% endif %}
+    <span>AI Insights</span>
+  </div>
+
+  <div class="insights-hero">
+    <div>
+      <h1>🤖 AI Business Insights</h1>
+      <p>Data-grounded observations & takeaways for <strong>{{ dataset.name|default:"Dataset" }}</strong></p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      {% if dataset %}
+      <a href="{% url 'ask_ai' dataset.id %}" class="btn btn-primary">💬 Ask AI</a>
+      <a href="{% url 'generate_charts' dataset.id %}" class="btn btn-secondary">📈 Visual Charts</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-error">⚠️ {{ error }}</div>
+  {% else %}
+
+  <!-- DOMAIN SUMMARY -->
+  {% if summary %}
+  <div class="domain-card">
+    <div class="domain-title">BUSINESS DOMAIN CLASSIFICATION</div>
+    <div class="domain-name">{{ summary.domain|default:"Business Analytics" }}</div>
+    <p class="domain-desc">{{ summary.description }}</p>
+    {% if summary.key_question %}
+    <div class="domain-question">
+      <span>❓</span>
+      <span><strong>Primary Business Question:</strong> {{ summary.key_question }}</span>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- DATA QUALITY DIAGNOSTICS -->
+  {% if data_quality %}
+  <div style="margin-bottom:20px;">
+    <h3 style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+      <span>🛡️</span> Data Quality & Integrity Diagnostics
+    </h3>
+    <div class="dq-grid">
+      {% for dq in data_quality %}
+      <div class="dq-card">
+        <span class="dq-severity dq-severity-{{ dq.severity|lower }}">{{ dq.severity|upper }} SEVERITY</span>
+        <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px;">Column: <code>{{ dq.column }}</code></div>
+        <p style="font-size:12.5px;color:#475569;margin:0 0 8px;">{{ dq.issue }}</p>
+        <div style="font-size:12px;color:#166534;background:#f0fdf4;padding:6px 10px;border-radius:6px;">
+          💡 <strong>Fix:</strong> {{ dq.suggestion }}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- INSIGHT CARDS GRID -->
+  <div style="margin-bottom:16px;">
+    <h3 style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:6px;">
+      <span>💡</span> Key Empirical Findings
+    </h3>
+  </div>
+
+  <div class="insights-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px;margin-bottom:28px;">
+    {% for insight in insights %}
+    <div class="insight-card">
+      <div class="insight-header">
+        <h4 class="insight-title">{{ insight.title }}</h4>
+        <span class="insight-badge badge-{{ insight.type }}">{{ insight.type|upper }}</span>
+      </div>
+      <p class="insight-detail">{{ insight.detail }}</p>
+      {% if insight.columns_used %}
+      <div class="insight-footer">
+        <span>Columns used:</span>
+        {% for c in insight.columns_used %}
+        <span class="col-pill">{{ c }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="alert alert-info">No empirical insights could be determined for this dataset.</div>
+    {% endfor %}
+  </div>
+
+  <!-- SUGGESTED QUESTIONS / FOLLOW-UPS -->
+  {% if suggested_followups and dataset %}
+  <div class="followups-card">
+    <h3><span>💬</span> Suggested Follow-Up Questions (Click to Ask AI)</h3>
+    <div class="chips-container">
+      {% for q in suggested_followups %}
+      <a href="{% url 'ask_ai' dataset.id %}?q={{ q|urlencode }}" class="question-chip">
+        <span>"{{ q }}"</span>
+        <span style="font-size:16px;">→</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% endif %}
+
+  <!-- ACTION NAVIGATION -->
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:28px;padding-top:20px;border-top:1px solid #e2e8f0;">
+    {% if dataset %}
+    <a href="{% url 'ask_ai' dataset.id %}" class="btn btn-primary">💬 Ask AI</a>
+    <a href="{% url 'generate_charts' dataset.id %}" class="btn btn-primary">📈 Generate Charts</a>
+    <a href="{% url 'ai_report' dataset.id %}" class="btn btn-secondary">📄 Business Report</a>
+    <a href="{% url 'analyze_dataset' dataset.id %}" class="btn btn-secondary">📋 Analysis</a>
+    {% endif %}
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">🏠 Dashboard</a>
+  </div>
+</div>
+
+<footer class="footer"><p>© 2026 AI Data Analyzer</p></footer>
+<script>
+(function(){
+  var t=document.getElementById('navToggle'),m=document.getElementById('navMobile');
+  if(t&&m){t.addEventListener('click',function(){m.classList.toggle('open');});document.addEventListener('click',function(e){if(!t.contains(e.target)&&!m.contains(e.target))m.classList.remove('open');});}
+})();
+</script>
+<script src="{% static 'js/pwa.js' %}"></script>
+</body>
+</html>

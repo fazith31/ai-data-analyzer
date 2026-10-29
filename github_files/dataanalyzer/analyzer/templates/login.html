@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — AI Data Analyzer</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DataAnalyzer">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192.png' %}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">🤖 AI Data Analyzer</div>
+  <div class="nav-links">
+    <button type="button" class="pwa-install-btn" id="pwaInstallBtn" title="Install as App">📲 Install App</button>
+    <a href="{% url 'home' %}">Home</a>
+    <a href="{% url 'login' %}">Login</a>
+    <a href="{% url 'register' %}">Register</a>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-mobile" id="navMobile">
+  <button type="button" class="pwa-install-btn mobile-pwa-btn" id="pwaInstallMobileBtn">📲 Install App</button>
+  <a href="{% url 'home' %}">Home</a>
+  <a href="{% url 'login' %}">Login</a>
+  <a href="{% url 'register' %}">Register</a>
+</div>
+
+<section class="auth-section">
+  <div class="auth-card">
+    <div class="auth-icon">🔐</div>
+    <h1>Welcome Back</h1>
+    <p class="auth-subtitle">Login to access your analytics dashboard</p>
+    {% if error %}<div class="auth-error">⚠️ {{ error }}</div>{% endif %}
+    <form method="POST" class="auth-form">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="Enter your username" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Enter your password" required>
+      </div>
+      <button type="submit" class="auth-button">Login →</button>
+    </form>
+    <p class="auth-footer">Don't have an account? <a href="{% url 'register' %}">Register</a></p>
+  </div>
+</section>
+
+<script>
+(function(){
+  var t=document.getElementById('navToggle'),m=document.getElementById('navMobile');
+  if(t&&m){t.addEventListener('click',function(){m.classList.toggle('open');});document.addEventListener('click',function(e){if(!t.contains(e.target)&&!m.contains(e.target))m.classList.remove('open');});}
+})();
+</script>
+<script src="{% static 'js/pwa.js' %}"></script>
+</body>
+</html>

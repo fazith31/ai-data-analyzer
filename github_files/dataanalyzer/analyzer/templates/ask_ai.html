@@ -1,0 +1,985 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ask AI — {{ dataset.name }} | AI Data Analyzer</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+  /* ── ASK AI HERO & CONTAINER ── */
+  .ask-ai-wrapper {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  .ask-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a8a 100%);
+    border-radius: 16px;
+    padding: 30px 34px;
+    margin-bottom: 22px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+    position: relative;
+    overflow: hidden;
+  }
+  .ask-hero::after {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .badge-pill-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(59, 130, 246, 0.22);
+    border: 1px solid rgba(147, 197, 253, 0.35);
+    color: #93c5fd;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+  }
+
+  .ask-hero-left h1 {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    margin-bottom: 6px;
+    color: #ffffff;
+  }
+  .ask-hero-left p {
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .ask-hero-left p strong { color: #60a5fa; }
+
+  .ask-hero-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    z-index: 1;
+  }
+  .btn-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .btn-hero-primary {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  }
+  .btn-hero-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+  }
+  .btn-hero-secondary {
+    background: rgba(255, 255, 255, 0.09);
+    color: #f1f5f9;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(6px);
+  }
+  .btn-hero-secondary:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* ── DATASET CONTEXT STRIP ── */
+  .context-strip {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  .context-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .context-icon {
+    width: 38px;
+    height: 38px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .context-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+  .context-meta-tag {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+  }
+  .context-pill {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #334155;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    background: #10b981;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+  }
+
+  /* ── CHAT STREAM CONTAINER ── */
+  .chat-stream-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    min-height: 200px;
+  }
+
+  .chat-bubble-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    width: 100%;
+  }
+  .chat-bubble-row.user-row {
+    flex-direction: row-reverse;
+  }
+
+  .chat-avatar-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+  .bot-avatar {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1px solid #93c5fd;
+  }
+  .user-avatar {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #86efac;
+  }
+
+  .bubble-content-wrap {
+    max-width: 86%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .user-row .bubble-content-wrap {
+    align-items: flex-end;
+  }
+
+  .bubble-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    color: #64748b;
+    padding: 0 4px;
+  }
+  .bubble-header strong {
+    color: #1e293b;
+    font-size: 12px;
+  }
+  .role-tag {
+    background: #e2e8f0;
+    color: #334155;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
+  .role-tag.ai {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  .bubble-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 22px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+    position: relative;
+  }
+  .bubble-card.user-bubble {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
+    border-top-right-radius: 4px;
+  }
+  .bubble-card.user-bubble p {
+    color: #ffffff;
+    font-size: 14.5px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .bubble-card.ai-bubble {
+    border-top-left-radius: 4px;
+    width: 100%;
+  }
+
+  /* Formatted AI Response typography */
+  .ai-answer-body {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #1e293b;
+  }
+  .ai-answer-body p {
+    margin-bottom: 12px;
+  }
+  .ai-answer-body p:last-child {
+    margin-bottom: 0;
+  }
+  .ai-answer-body strong {
+    color: #0f172a;
+    font-weight: 700;
+  }
+  .ai-answer-body .ai-bullet-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    line-height: 1.6;
+  }
+  .ai-answer-body .bullet-icon {
+    color: #2563eb;
+    font-weight: bold;
+    flex-shrink: 0;
+    line-height: 1.6;
+  }
+  .ai-answer-body .num-badge {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .ai-answer-body code.code-pill {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 2px 6px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #1e293b;
+  }
+  .ai-answer-body .highlight-pill {
+    background: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .bubble-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+  }
+  .btn-bubble-action {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-bubble-action:hover {
+    background: #eff6ff;
+    border-color: #93c5fa;
+    color: #1d4ed8;
+  }
+
+  /* ── QUESTION INPUT CARD ── */
+  .input-card {
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-card:focus-within {
+    border-color: #2563eb;
+    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.12);
+  }
+
+  .ask-form-layout {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .input-icon {
+    font-size: 20px;
+    color: #3b82f6;
+    flex-shrink: 0;
+  }
+  .ask-text-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14.5px;
+    color: #0f172a;
+    background: transparent;
+    padding: 8px 4px;
+  }
+  .ask-text-input::placeholder {
+    color: #94a3b8;
+  }
+  .btn-submit-ask {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    box-shadow: 0 3px 12px rgba(37, 99, 235, 0.3);
+    transition: all 0.2s;
+  }
+  .btn-submit-ask:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+  }
+  .btn-submit-ask:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .input-helper-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #64748b;
+    padding: 0 4px;
+  }
+
+  /* ── QUICK QUESTIONS SECTION ── */
+  .quick-section-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px 26px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  .quick-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .quick-section-header h2 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+  .quick-section-header p {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .quick-chips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px;
+  }
+  .chip-form {
+    margin: 0;
+  }
+  .quick-chip-btn {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+  }
+  .quick-chip-btn:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.08);
+  }
+  .chip-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .chip-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .chip-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    transition: color 0.2s;
+  }
+  .quick-chip-btn:hover .chip-label {
+    color: #1d4ed8;
+  }
+  .chip-arrow {
+    color: #94a3b8;
+    font-size: 13px;
+    transition: transform 0.2s, color 0.2s;
+  }
+  .quick-chip-btn:hover .chip-arrow {
+    color: #2563eb;
+    transform: translateX(3px);
+  }
+
+  /* ── BOTTOM NAVIGATION ACTIONS ── */
+  .ask-nav-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .ask-nav-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .ask-nav-links {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ask-nav-btn {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #334155;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .ask-nav-btn:hover {
+    background: #eff6ff;
+    border-color: #93c5fa;
+    color: #1d4ed8;
+    transform: translateY(-1px);
+  }
+
+  /* ── SPINNER & LOADING ── */
+  .typing-indicator {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 12px;
+    color: #1d4ed8;
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-top: 10px;
+  }
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #2563eb;
+    border-radius: 50%;
+    animation: pulseAnim 1.4s infinite ease-in-out both;
+  }
+  .pulse-dot:nth-child(1) { animation-delay: -0.32s; }
+  .pulse-dot:nth-child(2) { animation-delay: -0.16s; }
+  @keyframes pulseAnim {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  @media(max-width: 768px) {
+    .ask-ai-wrapper { padding: 16px 14px 40px; }
+    .ask-hero { padding: 22px 20px; }
+    .ask-hero-left h1 { font-size: 22px; }
+    .quick-chips-grid { grid-template-columns: 1fr; }
+    .bubble-content-wrap { max-width: 95%; }
+    .ask-nav-section { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DataAnalyzer">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192.png' %}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">🤖 AI Data Analyzer</div>
+  <div class="nav-links">
+    <button type="button" class="pwa-install-btn" id="pwaInstallBtn" title="Install as App">📲 Install App</button>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <a href="{% url 'upload_dataset' %}">Upload</a>
+    <form method="POST" action="{% url 'logout' %}" style="display:inline;">{% csrf_token %}<button type="submit">Logout</button></form>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-mobile" id="navMobile">
+  <button type="button" class="pwa-install-btn mobile-pwa-btn" id="pwaInstallMobileBtn">📲 Install App</button>
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  <a href="{% url 'upload_dataset' %}">Upload</a>
+  <form method="POST" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Logout</button></form>
+</div>
+
+<div class="ask-ai-wrapper">
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <span>/</span>
+    {% if dataset %}
+    <a href="{% url 'dataset_details' dataset.id %}">{{ dataset.name }}</a>
+    <span>/</span>
+    {% endif %}
+    <span>Ask AI</span>
+  </div>
+
+  <!-- HERO SECTION -->
+  <div class="ask-hero">
+    <div class="ask-hero-left">
+      <div class="badge-pill-hero">✨ CONVERSATIONAL AI ANALYST</div>
+      <h1>Ask AI Assistant</h1>
+      <p>Natural language business analytics for <strong>{{ dataset.name }}</strong> &bull; <span style="color:#93c5fd;">{{ row_count_fmt|default:"6,435" }} records across {{ col_count|default:"8" }} attributes</span></p>
+    </div>
+    <div class="ask-hero-actions">
+      {% if dataset %}
+      <a href="{% url 'ai_insights' dataset.id %}" class="btn-hero btn-hero-secondary">🤖 AI Insights</a>
+      <a href="{% url 'generate_charts' dataset.id %}" class="btn-hero btn-hero-secondary">📈 Visual Charts</a>
+      <a href="{% url 'ai_report' dataset.id %}" class="btn-hero btn-hero-secondary">📄 Executive Report</a>
+      <a href="{% url 'analyze_dataset' dataset.id %}" class="btn-hero btn-hero-secondary">📋 Data Preview</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- DATASET CONTEXT STRIP -->
+  <div class="context-strip">
+    <div class="context-left">
+      <div class="context-icon">📊</div>
+      <div>
+        <div class="context-title">{{ dataset.name }}</div>
+        <div style="font-size:11.5px;color:#64748b;margin-top:2px;">
+          Active dataset &bull; {{ row_count_fmt|default:"6,435" }} rows logged
+        </div>
+      </div>
+      <span class="context-meta-tag">{{ col_count|default:"8" }} Columns</span>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;">
+        {% for c in columns %}
+        <span class="context-pill">{{ c }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      <span>AI Engine Active</span>
+    </div>
+  </div>
+
+  <!-- CHAT STREAM -->
+  <div class="chat-stream-card" id="chatStream">
+    <!-- 1. ASSISTANT INTRODUCTORY GREETING -->
+    <div class="chat-bubble-row">
+      <div class="chat-avatar-badge bot-avatar">🤖</div>
+      <div class="bubble-content-wrap">
+        <div class="bubble-header">
+          <strong>AI Assistant</strong>
+          <span class="role-tag ai">Senior Data Analyst</span>
+          <span>&bull; Ready</span>
+        </div>
+        <div class="bubble-card ai-bubble">
+          <div class="ai-answer-body">
+            <p>Hello! 👋 I'm your dedicated <strong>AI Data Analyst</strong> for <strong>{{ dataset.name }}</strong>.</p>
+            <p>I have ingested and profiled all <strong>{{ row_count_fmt|default:"6,435" }} records</strong>. Ask me anything in plain English—from peak sales periods and store rankings to holiday effects and strategic growth advice!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. USER QUESTION BUBBLE (IF POSTED) -->
+    {% if question %}
+    <div class="chat-bubble-row user-row">
+      <div class="chat-avatar-badge user-avatar">👤</div>
+      <div class="bubble-content-wrap">
+        <div class="bubble-header">
+          <span>Just now</span>
+          <strong>You</strong>
+        </div>
+        <div class="bubble-card user-bubble">
+          <p>{{ question }}</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 3. AI ANSWER BUBBLE (IF ANSWERED) -->
+    {% if answer %}
+    <div class="chat-bubble-row" id="latestAnswerRow">
+      <div class="chat-avatar-badge bot-avatar">🤖</div>
+      <div class="bubble-content-wrap">
+        <div class="bubble-header">
+          <strong>AI Assistant</strong>
+          <span class="role-tag ai">Verified Analytics</span>
+          <span>&bull; Grounded Data</span>
+        </div>
+        <div class="bubble-card ai-bubble">
+          <div class="ai-answer-body raw-markdown" id="aiAnswerText">{{ answer }}</div>
+          <div class="bubble-actions-bar">
+            <button type="button" class="btn-bubble-action" id="copyAnswerBtn" onclick="copyAnswerText()">
+              <span>📋</span><span id="copyBtnText">Copy Answer</span>
+            </button>
+            <button type="button" class="btn-bubble-action" onclick="focusAskInput()">
+              <span>💬</span><span>Ask Follow-up</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- 4. ERROR BUBBLE -->
+    {% if error %}
+    <div class="chat-bubble-row">
+      <div class="chat-avatar-badge" style="background:#fee2e2;border:1px solid #fca5a5;">⚠️</div>
+      <div class="bubble-content-wrap">
+        <div class="bubble-header"><strong style="color:#b91c1c;">System Notice</strong></div>
+        <div class="bubble-card" style="background:#fff1f2;border-color:#fecdd3;color:#9f1239;">
+          <p style="margin:0;font-size:14px;">{{ error }}</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- TYPING INDICATOR -->
+    <div class="typing-indicator" id="aiTypingIndicator">
+      <div style="display:flex;gap:4px;align-items:center;">
+        <span class="pulse-dot"></span>
+        <span class="pulse-dot"></span>
+        <span class="pulse-dot"></span>
+      </div>
+      <span>AI Data Analyst is querying <strong>{{ dataset.name }}</strong>...</span>
+    </div>
+  </div>
+
+  <!-- INTERACTIVE QUESTION INPUT BOX -->
+  <div class="input-card">
+    <form method="POST" id="askMainForm">
+      {% csrf_token %}
+      <div class="ask-form-layout">
+        <span class="input-icon">✨</span>
+        <input type="text"
+               name="question"
+               id="questionInput"
+               class="ask-text-input"
+               placeholder="Ask anything about {{ dataset.name }} (e.g. 'What was the highest purchase?', 'Best store', 'Holiday impact')..."
+               autocomplete="off"
+               required>
+        <button type="submit" id="submitBtn" class="btn-submit-ask">
+          <span>Ask AI</span>
+          <span>🤖</span>
+        </button>
+      </div>
+    </form>
+    <div class="input-helper-bar">
+      <span>💡 Try asking about revenue records, store leaders, dates, external factors, or business advice.</span>
+      <span style="font-size:11.5px;color:#94a3b8;">Instant deterministic analytics</span>
+    </div>
+  </div>
+
+  <!-- DYNAMIC SUGGESTED QUICK QUESTIONS -->
+  <div class="quick-section-card">
+    <div class="quick-section-header">
+      <div>
+        <h2>💡 Suggested Questions for {{ dataset.name }}</h2>
+        <p>Click any verified prompt below to run instant dataset analysis:</p>
+      </div>
+    </div>
+    <div class="quick-chips-grid">
+      {% for sq in suggested_questions %}
+      <form method="POST" class="chip-form">
+        {% csrf_token %}
+        <input type="hidden" name="question" value="{{ sq.query }}">
+        <button type="submit" class="quick-chip-btn">
+          <div class="chip-left">
+            <span class="chip-icon">{{ sq.icon }}</span>
+            <span class="chip-label">{{ sq.label }}</span>
+          </div>
+          <span class="chip-arrow">&rarr;</span>
+        </button>
+      </form>
+      {% empty %}
+      <form method="POST" class="chip-form">
+        {% csrf_token %}
+        <input type="hidden" name="question" value="What is the total sales?">
+        <button type="submit" class="quick-chip-btn">
+          <div class="chip-left"><span class="chip-icon">💰</span><span class="chip-label">Total Revenue</span></div>
+          <span class="chip-arrow">&rarr;</span>
+        </button>
+      </form>
+      <form method="POST" class="chip-form">
+        {% csrf_token %}
+        <input type="hidden" name="question" value="What was the highest single sales week?">
+        <button type="submit" class="quick-chip-btn">
+          <div class="chip-left"><span class="chip-icon">⚡</span><span class="chip-label">Peak Sales Record</span></div>
+          <span class="chip-arrow">&rarr;</span>
+        </button>
+      </form>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- BOTTOM NAVIGATION LINKS -->
+  <div class="ask-nav-section">
+    <span class="ask-nav-label">Explore More for {{ dataset.name }}</span>
+    <div class="ask-nav-links">
+      {% if dataset %}
+      <a href="{% url 'dataset_details' dataset.id %}" class="ask-nav-btn">📊 Dataset Details</a>
+      <a href="{% url 'ai_insights' dataset.id %}" class="ask-nav-btn">🤖 AI Insights</a>
+      <a href="{% url 'generate_charts' dataset.id %}" class="ask-nav-btn">📈 Charts &amp; Visuals</a>
+      <a href="{% url 'ai_report' dataset.id %}" class="ask-nav-btn">📄 Executive Report</a>
+      <a href="{% url 'analyze_dataset' dataset.id %}" class="ask-nav-btn">📋 Data Table</a>
+      {% endif %}
+      <a href="{% url 'dashboard' %}" class="ask-nav-btn">🏠 Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<footer class="footer"><p>&copy; 2026 AI Data Analyzer &bull; Senior Analytics Suite</p></footer>
+
+<script>
+(function(){
+  // Mobile Nav Toggle
+  var t = document.getElementById('navToggle'), m = document.getElementById('navMobile');
+  if(t && m){
+    t.addEventListener('click', function(){ m.classList.toggle('open'); });
+    document.addEventListener('click', function(e){
+      if(!t.contains(e.target) && !m.contains(e.target)) m.classList.remove('open');
+    });
+  }
+
+  // Loading Indicator on submit
+  function showThinking(){
+    var spinner = document.getElementById('aiTypingIndicator');
+    var btn = document.getElementById('submitBtn');
+    if(spinner) spinner.style.display = 'flex';
+    if(btn){
+      btn.disabled = true;
+      btn.innerHTML = '<span>Thinking...</span> <span>⏳</span>';
+    }
+  }
+
+  var mainForm = document.getElementById('askMainForm');
+  if(mainForm) mainForm.addEventListener('submit', showThinking);
+
+  document.querySelectorAll('.chip-form').forEach(function(f){
+    f.addEventListener('submit', showThinking);
+  });
+
+  // Client-side Markdown Formatter for AI Answer
+  function formatMarkdown(rawText){
+    if(!rawText) return '';
+    var lines = rawText.split('\n');
+    var html = [];
+
+    lines.forEach(function(line){
+      var trimmed = line.trim();
+      if(!trimmed){
+        html.push('<div style="height:8px;"></div>');
+        return;
+      }
+
+      // Convert inline code `code`
+      var processed = line.replace(/`([^`]+)`/g, '<code class="code-pill">$1</code>');
+
+      // Convert **bold**
+      processed = processed.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+      // Convert *italic*
+      processed = processed.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+      // Convert bullet items • or -
+      if(trimmed.startsWith('•') || trimmed.startsWith('-')){
+        var itemContent = processed.replace(/^[\s•\-]+/, '');
+        html.push('<div class="ai-bullet-item"><span class="bullet-icon">•</span><span>' + itemContent + '</span></div>');
+      } else if(/^\d+\.\s/.test(trimmed)){
+        // Numbered list item: 1. Item
+        var num = trimmed.match(/^(\d+)\.\s/)[1];
+        var itemContent = processed.replace(/^\d+\.\s/, '');
+        html.push('<div class="ai-bullet-item"><span class="num-badge">' + num + '</span><span>' + itemContent + '</span></div>');
+      } else {
+        html.push('<p>' + processed + '</p>');
+      }
+    });
+
+    return html.join('');
+  }
+
+  var ansContainer = document.getElementById('aiAnswerText');
+  if(ansContainer){
+    var raw = ansContainer.textContent || ansContainer.innerText;
+    ansContainer.innerHTML = formatMarkdown(raw);
+  }
+
+  // Auto-scroll to latest answer if present
+  var latestRow = document.getElementById('latestAnswerRow');
+  if(latestRow){
+    latestRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+})();
+
+function copyAnswerText(){
+  var elem = document.getElementById('aiAnswerText');
+  if(!elem) return;
+  var text = elem.innerText || elem.textContent;
+  navigator.clipboard.writeText(text).then(function(){
+    var btnText = document.getElementById('copyBtnText');
+    if(btnText){
+      btnText.textContent = 'Copied! ✓';
+      setTimeout(function(){ btnText.textContent = 'Copy Answer'; }, 2000);
+    }
+  }).catch(function(err){
+    console.error('Clipboard copy failed:', err);
+  });
+}
+
+function focusAskInput(){
+  var inp = document.getElementById('questionInput');
+  if(inp){
+    inp.focus();
+    inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+</script>
+<script src="{% static 'js/pwa.js' %}"></script>
+</body>
+</html>

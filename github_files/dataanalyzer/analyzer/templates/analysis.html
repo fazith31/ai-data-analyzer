@@ -1,0 +1,368 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analysis — {{ dataset.name }} | AI Data Analyzer</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+  .preview-table th {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 24px !important;
+    transition: background-color 0.15s ease;
+  }
+  .preview-table th:hover {
+    background-color: #f1f5f9;
+    color: #2563eb;
+  }
+  .sort-indicator {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .preview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .filter-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .filter-input {
+    padding: 7px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 13px;
+    width: 240px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .filter-input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+  .pagination-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #f1f5f9;
+  }
+  .page-btn {
+    padding: 6px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #334155;
+    background: #fff;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .page-btn:hover:not(.disabled) {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+  }
+  .page-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .page-btn.page-active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+  }
+</style>
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DataAnalyzer">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192.png' %}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">🤖 AI Data Analyzer</div>
+  <div class="nav-links">
+    <button type="button" class="pwa-install-btn" id="pwaInstallBtn" title="Install as App">📲 Install App</button>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <a href="{% url 'upload_dataset' %}">Upload</a>
+    <form method="POST" action="{% url 'logout' %}" style="display:inline;">{% csrf_token %}<button type="submit">Logout</button></form>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-mobile" id="navMobile">
+  <button type="button" class="pwa-install-btn mobile-pwa-btn" id="pwaInstallMobileBtn">📲 Install App</button>
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  <a href="{% url 'upload_dataset' %}">Upload</a>
+  <form method="POST" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Logout</button></form>
+</div>
+
+<div class="page-wrapper">
+  <div class="breadcrumb">
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <span>/</span>
+    <a href="{% url 'dataset_details' dataset.id %}">{{ dataset.name }}</a>
+    <span>/</span>
+    <span>Analysis</span>
+  </div>
+
+  <div class="page-header">
+    <h1>📊 Dataset Structure & Statistics</h1>
+    <p>{{ dataset.name }} &nbsp;|&nbsp; <strong>{{ rows|default:0 }}</strong> total records &nbsp;|&nbsp; <strong>{{ columns|default:0 }}</strong> attributes</p>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-error">⚠️ {{ error }}</div>
+  {% else %}
+
+  <!-- KPI SUMMARY CARDS -->
+  <div class="analysis-kpi">
+    <div class="analysis-kpi-card"><h3>Total Rows</h3><p>{{ rows }}</p></div>
+    <div class="analysis-kpi-card"><h3>Total Columns</h3><p>{{ columns }}</p></div>
+    <div class="analysis-kpi-card"><h3>Missing Values</h3><p>{{ total_missing }}</p></div>
+    <div class="analysis-kpi-card"><h3>Duplicate Rows</h3><p>{{ duplicate_rows }}</p></div>
+  </div>
+
+  <!-- COLUMNS LIST -->
+  <div class="section-card">
+    <h2>📋 Dataset Columns</h2>
+    <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
+      {% for col in column_names %}
+      <span class="col-tag">{{ col }}</span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- DATA PREVIEW WITH PAGINATION & FILTERING/SORTING -->
+  <div class="section-card">
+    <div class="preview-toolbar">
+      <div>
+        <h2 style="margin:0;display:inline-block;vertical-align:middle;">👀 Data Preview</h2>
+        <span style="font-size:12.5px;color:#64748b;font-weight:500;margin-left:8px;">
+          Rows {{ preview_start_display }}–{{ preview_end_display }} of {{ total_preview_rows }}
+        </span>
+      </div>
+      <div class="filter-input-wrap">
+        <input type="text" id="previewFilter" class="filter-input" placeholder="🔍 Filter rows on this page..." oninput="filterPreviewTable(this.value)">
+        <span id="filterCount" style="font-size:12px;color:#64748b;display:none;"></span>
+      </div>
+    </div>
+
+    <div style="font-size:11.5px;color:#64748b;margin-bottom:8px;">
+      💡 <em>Tip: Click any column header below to sort ascending or descending.</em>
+    </div>
+
+    <div class="table-wrapper" id="previewTableContainer">
+      {{ preview|safe }}
+    </div>
+
+    <!-- PREVIEW PAGINATION CONTROLS -->
+    {% if total_preview_pages > 1 %}
+    <div class="pagination-bar">
+      <div>
+        <span style="font-size:12.5px;color:#64748b;font-weight:500;">
+          Page {{ preview_page }} of {{ total_preview_pages }}
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        {% if preview_page > 1 %}
+        <a href="?preview_page={{ preview_page|add:'-1' }}" class="page-btn">← Prev</a>
+        {% else %}
+        <span class="page-btn disabled">← Prev</span>
+        {% endif %}
+
+        {% for p in preview_page_range %}
+          {% if p == preview_page %}
+            <span class="page-btn page-active">{{ p }}</span>
+          {% else %}
+            <a href="?preview_page={{ p }}" class="page-btn">{{ p }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if preview_page < total_preview_pages %}
+        <a href="?preview_page={{ preview_page|add:'1' }}" class="page-btn">Next →</a>
+        {% else %}
+        <span class="page-btn disabled">Next →</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- MISSING VALUES -->
+  <div class="section-card">
+    <h2>⚠️ Missing Values Distribution</h2>
+    <div class="table-wrapper">
+      <table class="info-table">
+        <thead><tr><th>Column</th><th>Missing Count</th></tr></thead>
+        <tbody>
+          {% for col,val in missing_values.items %}
+          <tr>
+            <td><strong>{{ col }}</strong></td>
+            <td>{% if val > 0 %}<span style="color:#dc2626;font-weight:600;">{{ val }}</span>{% else %}<span style="color:#16a34a;">0</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DATA TYPES -->
+  <div class="section-card">
+    <h2>🔤 Inferred Data Types</h2>
+    <div class="table-wrapper">
+      <table class="info-table">
+        <thead><tr><th>Column</th><th>Data Type</th></tr></thead>
+        <tbody>
+          {% for col,val in data_types.items %}
+          <tr>
+            <td><strong>{{ col }}</strong></td>
+            <td><code>{{ val }}</code></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- STATISTICAL SUMMARY -->
+  <div class="section-card">
+    <h2>📊 Statistical Summary (Numeric Measures)</h2>
+    <div class="table-wrapper">{{ statistics|safe }}</div>
+  </div>
+
+  <!-- ANALYTICS TOOLS QUICK LINKS -->
+  <div class="section-card">
+    <h2>🚀 Analytics Tools</h2>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+      <a class="btn btn-primary" href="{% url 'generate_charts' dataset.id %}">📈 Charts</a>
+      <a class="btn btn-primary" href="{% url 'ai_insights' dataset.id %}">🤖 AI Insights</a>
+      <a class="btn btn-primary" href="{% url 'ask_ai' dataset.id %}">💬 Ask AI</a>
+      <a class="btn btn-primary" href="{% url 'ai_report' dataset.id %}">📄 Business Report</a>
+      <a class="btn btn-secondary" href="{% url 'dashboard' %}">← Dashboard</a>
+    </div>
+  </div>
+
+  {% endif %}
+</div>
+
+<footer class="footer"><p>© 2026 AI Data Analyzer</p></footer>
+
+<script>
+(function(){
+  // Mobile nav toggle
+  var t=document.getElementById('navToggle'), m=document.getElementById('navMobile');
+  if(t&&m){
+    t.addEventListener('click',function(){ m.classList.toggle('open'); });
+    document.addEventListener('click',function(e){
+      if(!t.contains(e.target)&&!m.contains(e.target)) m.classList.remove('open');
+    });
+  }
+
+  // Interactive Table Column Sorting
+  var table = document.querySelector('.preview-table');
+  if (table) {
+    var headers = table.querySelectorAll('th');
+    var sortStates = {};
+
+    headers.forEach(function(th, colIdx) {
+      var text = th.textContent.trim();
+      th.setAttribute('title', 'Click to sort column');
+      var indicator = document.createElement('span');
+      indicator.className = 'sort-indicator';
+      indicator.innerHTML = '⇅';
+      th.appendChild(indicator);
+
+      th.addEventListener('click', function() {
+        var isAsc = sortStates[colIdx] === 'asc';
+        var newOrder = isAsc ? 'desc' : 'asc';
+        sortStates[colIdx] = newOrder;
+
+        // Reset all indicator arrows
+        headers.forEach(function(h, idx) {
+          var ind = h.querySelector('.sort-indicator');
+          if (ind) {
+            ind.innerHTML = idx === colIdx ? (newOrder === 'asc' ? '▲' : '▼') : '⇅';
+            ind.style.color = idx === colIdx ? '#2563eb' : '#94a3b8';
+          }
+        });
+
+        // Perform sorting on tbody rows
+        var tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        var rows = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort(function(rowA, rowB) {
+          var cellA = rowA.cells[colIdx] ? rowA.cells[colIdx].textContent.trim() : '';
+          var cellB = rowB.cells[colIdx] ? rowB.cells[colIdx].textContent.trim() : '';
+
+          // Check if numeric
+          var numA = parseFloat(cellA.replace(/[$,₹,%]/g, ''));
+          var numB = parseFloat(cellB.replace(/[$,₹,%]/g, ''));
+
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return newOrder === 'asc' ? numA - numB : numB - numA;
+          }
+
+          return newOrder === 'asc' 
+            ? cellA.localeCompare(cellB, undefined, {numeric: true, sensitivity: 'base'})
+            : cellB.localeCompare(cellA, undefined, {numeric: true, sensitivity: 'base'});
+        });
+
+        // Re-append sorted rows
+        rows.forEach(function(r) { tbody.appendChild(r); });
+      });
+    });
+  }
+})();
+
+// Real-time Row Filtering on Preview Table
+function filterPreviewTable(query) {
+  var table = document.querySelector('.preview-table');
+  var countBadge = document.getElementById('filterCount');
+  if (!table) return;
+  var tbody = table.querySelector('tbody');
+  if (!tbody) return;
+
+  var q = query.toLowerCase().trim();
+  var rows = tbody.querySelectorAll('tr');
+  var visibleCount = 0;
+
+  rows.forEach(function(row) {
+    var text = row.textContent.toLowerCase();
+    var match = !q || text.indexOf(q) !== -1;
+    row.style.display = match ? '' : 'none';
+    if (match) visibleCount++;
+  });
+
+  if (countBadge) {
+    if (q) {
+      countBadge.style.display = 'inline';
+      countBadge.textContent = '(' + visibleCount + ' of ' + rows.length + ' visible)';
+    } else {
+      countBadge.style.display = 'none';
+    }
+  }
+}
+</script>
+<script src="{% static 'js/pwa.js' %}"></script>
+</body>
+</html>

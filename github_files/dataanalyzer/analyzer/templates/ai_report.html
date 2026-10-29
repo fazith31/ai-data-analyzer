@@ -1,0 +1,463 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Business Report — {{ dataset.name }} | AI Data Analyzer</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+  /* ── SCREEN STYLES ── */
+  .report-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a8a 100%);
+    border-radius: 16px;
+    padding: 36px 40px;
+    margin-bottom: 28px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.18);
+  }
+  .report-hero h1 {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .report-hero p {
+    color: #94a3b8;
+    font-size: 14px;
+  }
+  .report-hero p strong { color: #60a5fa; }
+  .report-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-print {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff !important;
+    border: none;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+    transition: all 0.2s;
+  }
+  .btn-print:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(37,99,235,0.4);
+  }
+
+  .btn-copy {
+    background: #ffffff;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-copy:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+  }
+
+  /* ── REPORT DOSSIER CARDS ── */
+  .dossier-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .dossier-card h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1.5px solid #f1f5f9;
+    padding-bottom: 12px;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 14px;
+  }
+  .summary-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .summary-item span {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .summary-item p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .findings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .finding-item {
+    background: #fafbfc;
+    border-left: 4px solid #2563eb;
+    border-top: 1px solid #f1f5f9;
+    border-right: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+  }
+  .finding-item h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .finding-item p {
+    font-size: 13.5px;
+    color: #475569;
+    margin: 0;
+    line-height: 1.55;
+  }
+  .badge-type {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .badge-trend { background: #dbeafe; color: #1e40af; }
+  .badge-comparison { background: #fef3c7; color: #92400e; }
+  .badge-correlation { background: #e0e7ff; color: #3730a3; }
+  .badge-outlier { background: #fee2e2; color: #991b1b; }
+  .badge-recommendation { background: #dcfce7; color: #166534; }
+
+  .rec-card {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .rec-card h4 {
+    color: #15803d;
+    font-size: 14.5px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .rec-card p {
+    color: #1e3a1e;
+    font-size: 13.5px;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .raw-report-pre {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 20px 24px;
+    border-radius: 12px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── PRINT STYLESHEET (PDF Export) ── */
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 15mm 18mm;
+    }
+    body {
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-size: 11pt;
+      line-height: 1.45;
+    }
+    .navbar, .nav-mobile, .breadcrumb, .report-hero-actions, .report-controls, .report-actions, .footer, .btn-print, .btn-copy, .btn {
+      display: none !important;
+    }
+    .report-hero {
+      background: none !important;
+      color: #000 !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 0 16px 0 !important;
+      margin-bottom: 16px !important;
+      border-bottom: 2px solid #000 !important;
+    }
+    .report-hero h1 {
+      font-size: 20pt !important;
+      color: #000 !important;
+      margin: 0 0 4px 0 !important;
+    }
+    .report-hero p {
+      color: #333 !important;
+      font-size: 10pt !important;
+    }
+    .dossier-card {
+      border: 1px solid #ccc !important;
+      box-shadow: none !important;
+      padding: 14px 18px !important;
+      margin-bottom: 16px !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    .dossier-card h2 {
+      font-size: 13pt !important;
+      color: #000 !important;
+      border-bottom: 1px solid #ddd !important;
+      padding-bottom: 6px !important;
+    }
+    .summary-item, .finding-item, .rec-card {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      background: #fff !important;
+      border: 1px solid #ccc !important;
+      color: #000 !important;
+    }
+    .finding-item p, .rec-card p {
+      color: #222 !important;
+    }
+    .raw-report-pre {
+      display: none !important;
+    }
+  }
+</style>
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DataAnalyzer">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192.png' %}">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">🤖 AI Data Analyzer</div>
+  <div class="nav-links">
+    <button type="button" class="pwa-install-btn" id="pwaInstallBtn" title="Install as App">📲 Install App</button>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <a href="{% url 'upload_dataset' %}">Upload</a>
+    <form method="POST" action="{% url 'logout' %}" style="display:inline;">{% csrf_token %}<button type="submit">Logout</button></form>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-mobile" id="navMobile">
+  <button type="button" class="pwa-install-btn mobile-pwa-btn" id="pwaInstallMobileBtn">📲 Install App</button>
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  <a href="{% url 'upload_dataset' %}">Upload</a>
+  <form method="POST" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Logout</button></form>
+</div>
+
+<div class="page-wrapper">
+
+  <div class="breadcrumb">
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <span>/</span>
+    <a href="{% url 'dataset_details' dataset.id %}">{{ dataset.name }}</a>
+    <span>/</span>
+    <span>AI Business Report</span>
+  </div>
+
+  <!-- HERO SECTION WITH PDF & COPY CONTROLS -->
+  <div class="report-hero">
+    <div class="report-hero-left">
+      <h1>📄 Executive Business Report</h1>
+      <p>Dataset: <strong>{{ dataset.name }}</strong> &nbsp;|&nbsp; Generated on: <strong>{% now "F j, Y, g:i A" %}</strong></p>
+    </div>
+    <div class="report-controls">
+      <!-- Print to PDF button triggers browser Save as PDF dialog -->
+      <button onclick="window.print()" class="btn-print" title="Export as PDF file">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        <span>🖨️ Print / Save as PDF</span>
+      </button>
+
+      <!-- Copy Report Text to Clipboard -->
+      <button id="copyBtn" onclick="copyReportText()" class="btn-copy" title="Copy full report text">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span id="copyBtnText">📋 Copy Report</span>
+      </button>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-error"><h3>⚠️ Error</h3><p>{{ error }}</p></div>
+  {% else %}
+
+  <!-- SECTION 1: EXECUTIVE SUMMARY -->
+  <div class="dossier-card">
+    <h2>🎯 Executive Summary</h2>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <span>Business Domain</span>
+        <p>{{ summary.domain|default:"Business Analytics" }}</p>
+      </div>
+      <div class="summary-item">
+        <span>Dataset Overview</span>
+        <p>{{ summary.description|default:"Comprehensive quantitative analysis of dataset records." }}</p>
+      </div>
+      <div class="summary-item">
+        <span>Key Business Question</span>
+        <p>{{ summary.key_question|default:"How does performance vary across segments and time?" }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: KEY FINDINGS & MEASURES -->
+  {% if insights %}
+  <div class="dossier-card">
+    <h2>🔍 Key Findings & Performance Metrics</h2>
+    <div class="findings-list">
+      {% for ins in insights %}
+      {% if ins.type != 'recommendation' %}
+      <div class="finding-item">
+        <h4>
+          <span>{{ ins.title }}</span>
+          <span class="badge-type badge-{{ ins.type }}">{{ ins.type }}</span>
+        </h4>
+        <p>{{ ins.detail }}</p>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- SECTION 3: STRATEGIC RECOMMENDATIONS -->
+  {% if insights %}
+  <div class="dossier-card">
+    <h2>💡 Strategic Recommendations</h2>
+    <div>
+      {% for ins in insights %}
+      {% if ins.type == 'recommendation' %}
+      <div class="rec-card">
+        <h4>{{ ins.title }}</h4>
+        <p>{{ ins.detail }}</p>
+      </div>
+      {% endif %}
+      {% empty %}
+      <p style="color:#64748b;font-size:13.5px;">No specific strategic recommendations detected for this dataset.</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- SECTION 4: FULL RAW REPORT DOSSIER -->
+  <div class="dossier-card">
+    <h2>📑 Full Dossier Text</h2>
+    <div class="raw-report-pre" id="reportContentText">{{ report|default:"No dossier available." }}</div>
+  </div>
+
+  {% endif %}
+
+  <!-- ACTION NAVIGATION -->
+  <div class="report-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;">
+    <a href="{% url 'ai_insights' dataset.id %}" class="btn btn-primary">🤖 AI Insights</a>
+    <a href="{% url 'generate_charts' dataset.id %}" class="btn btn-primary">📈 Charts</a>
+    <a href="{% url 'ask_ai' dataset.id %}" class="btn btn-primary">💬 Ask AI</a>
+    <a href="{% url 'analyze_dataset' dataset.id %}" class="btn btn-secondary">📋 Analysis</a>
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">🏠 Dashboard</a>
+  </div>
+
+</div>
+
+<footer class="footer"><p>© 2026 AI Data Analyzer</p></footer>
+
+<script>
+(function(){
+  // Mobile nav
+  var t=document.getElementById('navToggle'), m=document.getElementById('navMobile');
+  if(t&&m){
+    t.addEventListener('click',function(){ m.classList.toggle('open'); });
+    document.addEventListener('click',function(e){
+      if(!t.contains(e.target)&&!m.contains(e.target)) m.classList.remove('open');
+    });
+  }
+})();
+
+// Copy Report to Clipboard
+function copyReportText() {
+  var textElem = document.getElementById('reportContentText');
+  var copyBtnText = document.getElementById('copyBtnText');
+  if (!textElem) return;
+  var text = textElem.innerText || textElem.textContent;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      showCopiedSuccess();
+    }).catch(function() {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+
+  function showCopiedSuccess() {
+    if (copyBtnText) {
+      var original = copyBtnText.textContent;
+      copyBtnText.textContent = '✅ Copied!';
+      setTimeout(function() { copyBtnText.textContent = original; }, 2200);
+    }
+  }
+
+  function fallbackCopy(str) {
+    var ta = document.createElement('textarea');
+    ta.value = str;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showCopiedSuccess();
+    } catch(err) {}
+    document.body.removeChild(ta);
+  }
+}
+</script>
+<script src="{% static 'js/pwa.js' %}"></script>
+</body>
+</html>

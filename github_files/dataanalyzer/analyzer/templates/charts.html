@@ -1,0 +1,501 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charts — {{ dataset.name }} | AI Data Analyzer</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+  /* ── CHARTS PAGE OVERRIDES ── */
+  .charts-hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #1e3a8a 100%);
+    border-radius: 16px;
+    padding: 36px 40px;
+    margin-bottom: 32px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
+  }
+  .charts-hero::after {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .charts-hero-left h1 {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .charts-hero-left p {
+    color: #94a3b8;
+    font-size: 14px;
+  }
+  .charts-hero-left p strong { color: #60a5fa; }
+  .charts-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; z-index: 1; }
+
+  .charts-stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .charts-stat {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    flex: 1;
+    min-width: 140px;
+  }
+  .charts-stat-icon {
+    font-size: 20px;
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid #bfdbfe;
+    flex-shrink: 0;
+  }
+  .charts-stat-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+  .charts-stat-value { font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px; }
+
+  /* ── CHART GRID ── */
+  .chart-grid-pro {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .chart-card-pro {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .chart-card-pro:hover {
+    box-shadow: 0 8px 28px rgba(37,99,235,0.12);
+    border-color: #93c5fd;
+    transform: translateY(-3px);
+  }
+  .chart-card-pro.span-full {
+    grid-column: 1 / -1;
+  }
+
+  .chart-card-top {
+    padding: 18px 22px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .chart-number {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .chart-title-block { flex: 1; min-width: 0; }
+  .chart-title-block h3 {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+  .chart-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+  }
+
+  /* ── DOWNLOAD BUTTON ── */
+  .chart-dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #2563eb;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+  .chart-dl-btn:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(37,99,235,0.15);
+  }
+
+  .chart-img-wrap {
+    padding: 16px 20px;
+    background: #fafbfc;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chart-img-wrap img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid #f1f5f9;
+    display: block;
+    cursor: zoom-in;
+    transition: opacity 0.2s;
+  }
+  .chart-img-wrap img:hover { opacity: 0.92; }
+
+  .chart-insight-strip {
+    padding: 12px 22px;
+    background: linear-gradient(90deg, #eff6ff 0%, #f8fafc 100%);
+    border-top: 1px solid #e0e7ff;
+    font-size: 12.5px;
+    color: #1e40af;
+    line-height: 1.55;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .chart-insight-strip .bulb { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+
+  /* ── BOTTOM NAV ── */
+  .charts-nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 24px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 8px;
+  }
+
+  /* ── LIGHTBOX ── */
+  .lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(9,13,22,0.92);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    cursor: zoom-out;
+  }
+  .lightbox.active { display: flex; }
+  .lightbox img {
+    max-width: 92vw;
+    max-height: 85vh;
+    border-radius: 12px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    cursor: default;
+  }
+  .lightbox-toolbar {
+    position: fixed;
+    top: 20px;
+    right: 80px;
+    display: flex;
+    gap: 12px;
+    z-index: 10000;
+  }
+  .lightbox-dl-btn {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+  }
+  .lightbox-dl-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+  .lightbox-close {
+    position: fixed;
+    top: 20px; right: 24px;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .lightbox-close:hover { background: rgba(255,255,255,0.2); }
+
+  @media(max-width: 768px) {
+    .chart-grid-pro { grid-template-columns: 1fr; }
+    .chart-card-pro.span-full { grid-column: auto; }
+    .charts-hero { padding: 22px 20px; }
+    .charts-hero-left h1 { font-size: 18px; }
+    .charts-stats-bar { gap: 10px; }
+    .charts-stat { min-width: 120px; padding: 12px 14px; }
+    .chart-card-top { flex-wrap: wrap; }
+    .lightbox-toolbar { right: 70px; }
+  }
+</style>
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DataAnalyzer">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192.png' %}">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">🤖 AI Data Analyzer</div>
+  <div class="nav-links">
+    <button type="button" class="pwa-install-btn" id="pwaInstallBtn" title="Install as App">📲 Install App</button>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <a href="{% url 'upload_dataset' %}">Upload</a>
+    <form method="POST" action="{% url 'logout' %}" style="display:inline;">{% csrf_token %}<button type="submit">Logout</button></form>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-mobile" id="navMobile">
+  <button type="button" class="pwa-install-btn mobile-pwa-btn" id="pwaInstallMobileBtn">📲 Install App</button>
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  <a href="{% url 'upload_dataset' %}">Upload</a>
+  <form method="POST" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Logout</button></form>
+</div>
+
+<div class="page-wrapper">
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <span>/</span>
+    <a href="{% url 'dataset_details' dataset.id %}">{{ dataset.name }}</a>
+    <span>/</span>
+    <span>Charts</span>
+  </div>
+
+  <!-- HERO HEADER -->
+  <div class="charts-hero">
+    <div class="charts-hero-left">
+      <h1>📈 Visual Analytics</h1>
+      <p>Auto-generated charts for <strong>{{ dataset.name }}</strong> — matched to your data shape</p>
+    </div>
+    <div class="charts-hero-actions">
+      <a class="btn btn-primary" href="{% url 'ai_insights' dataset.id %}">🤖 AI Insights</a>
+      <a class="btn btn-secondary" href="{% url 'ai_report' dataset.id %}">📄 Report</a>
+    </div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="charts-stats-bar">
+    <div class="charts-stat">
+      <div class="charts-stat-icon">📊</div>
+      <div>
+        <div class="charts-stat-label">Charts Generated</div>
+        <div class="charts-stat-value">{{ charts|length }}</div>
+      </div>
+    </div>
+    <div class="charts-stat">
+      <div class="charts-stat-icon">🗂️</div>
+      <div>
+        <div class="charts-stat-label">Dataset</div>
+        <div class="charts-stat-value" style="font-size:14px;margin-top:2px;">{{ dataset.name }}</div>
+      </div>
+    </div>
+    <div class="charts-stat">
+      <div class="charts-stat-icon">🤖</div>
+      <div>
+        <div class="charts-stat-label">Engine</div>
+        <div class="charts-stat-value" style="font-size:14px;margin-top:2px;">AI Analyzer</div>
+      </div>
+    </div>
+    <div class="charts-stat">
+      <div class="charts-stat-icon">✅</div>
+      <div>
+        <div class="charts-stat-label">Status</div>
+        <div class="charts-stat-value" style="font-size:14px;margin-top:2px;color:#16a34a;">Ready</div>
+      </div>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="alert alert-error">⚠️ {{ error }}</div>
+  {% endif %}
+
+  <!-- CHARTS GRID -->
+  {% if charts %}
+  <div class="chart-grid-pro">
+    {% for chart in charts %}
+    <div class="chart-card-pro {% if charts|length == forloop.counter and forloop.counter|divisibleby:2 == False %}span-full{% endif %}">
+
+      <div class="chart-card-top">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+          <div class="chart-number">{{ forloop.counter }}</div>
+          <div class="chart-title-block">
+            <h3>{{ chart.title }}</h3>
+            <span class="chart-type-badge">📐 Visual Analytic</span>
+          </div>
+        </div>
+        <!-- Individual Chart PNG Download Button -->
+        <a href="{{ chart.url }}" download="{{ chart.title|default:'chart' }}_{{ forloop.counter }}.png" class="chart-dl-btn" title="Download chart image as PNG">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Download PNG</span>
+        </a>
+      </div>
+
+      <div class="chart-img-wrap">
+        <img src="{{ chart.url }}" alt="{{ chart.title }}" loading="lazy" class="chart-img" data-src="{{ chart.url }}" data-title="{{ chart.title }}">
+      </div>
+
+      {% if chart.insight %}
+      <div class="chart-insight-strip">
+        <span class="bulb">💡</span>
+        <span><strong>Takeaway:</strong> {{ chart.insight }}</span>
+      </div>
+      {% endif %}
+
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Guided Empty State for datasets with no numeric variance -->
+  <div class="empty-state" style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:48px 32px;text-align:center;max-width:720px;margin:20px auto 40px;box-shadow:0 4px 20px rgba(0,0,0,0.04);">
+    <div class="empty-state-icon" style="font-size:48px;margin-bottom:16px;">📊</div>
+    <h3 style="font-size:20px;font-weight:700;color:#0f172a;margin-bottom:8px;">No Numeric Charts Available</h3>
+    <p style="color:#64748b;font-size:14px;line-height:1.6;margin-bottom:20px;">
+      Charts require at least one numeric measure with variance (such as revenue, quantity, prices, ratings) or datetime trends to generate meaningful visualizations.
+    </p>
+
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 22px;text-align:left;margin-bottom:28px;">
+      <h4 style="font-size:13px;font-weight:700;color:#334155;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Why are no charts appearing for this dataset?</h4>
+      <ul style="margin:0;padding-left:20px;color:#475569;font-size:13px;line-height:1.8;">
+        <li><strong>Non-numeric dataset:</strong> All columns are text, IDs, or categories without a quantitative metric.</li>
+        <li><strong>Constant values:</strong> Numeric columns contain the same value across all rows (variance = 0).</li>
+        <li><strong>High null percentage:</strong> Numeric columns have over 50% missing values and were excluded from plotting.</li>
+      </ul>
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a href="{% url 'analyze_dataset' dataset.id %}" class="btn btn-primary">📋 Inspect Dataset Schema & Types</a>
+      <a href="{% url 'ai_insights' dataset.id %}" class="btn btn-secondary">🤖 View Text AI Insights</a>
+      <a href="{% url 'upload_dataset' %}" class="btn btn-secondary">📤 Upload Another Dataset</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- BOTTOM NAV -->
+  <div class="charts-nav">
+    <a class="btn btn-primary" href="{% url 'ai_insights' dataset.id %}">🤖 AI Insights</a>
+    <a class="btn btn-primary" href="{% url 'ask_ai' dataset.id %}">💬 Ask AI</a>
+    <a class="btn btn-secondary" href="{% url 'ai_report' dataset.id %}">📄 Business Report</a>
+    <a class="btn btn-secondary" href="{% url 'analyze_dataset' dataset.id %}">📋 Analysis</a>
+    <a class="btn btn-secondary" href="{% url 'dashboard' %}">🏠 Dashboard</a>
+  </div>
+
+</div>
+
+<footer class="footer"><p>© 2026 AI Data Analyzer</p></footer>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-toolbar">
+    <a id="lightboxDlBtn" href="" download="" class="lightbox-dl-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span>Download PNG</span>
+    </a>
+  </div>
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+(function(){
+  // Mobile nav
+  var t=document.getElementById('navToggle'),m=document.getElementById('navMobile');
+  if(t&&m){
+    t.addEventListener('click',function(){m.classList.toggle('open');});
+    document.addEventListener('click',function(e){if(!t.contains(e.target)&&!m.contains(e.target))m.classList.remove('open');});
+  }
+
+  // Lightbox
+  var lb=document.getElementById('lightbox');
+  var lbImg=document.getElementById('lightboxImg');
+  var lbClose=document.getElementById('lightboxClose');
+  var lbDlBtn=document.getElementById('lightboxDlBtn');
+
+  document.querySelectorAll('.chart-img').forEach(function(img){
+    img.addEventListener('click',function(){
+      var src = this.dataset.src || this.src;
+      var title = this.dataset.title || 'chart';
+      lbImg.src = src;
+      lbDlBtn.href = src;
+      lbDlBtn.download = title + '.png';
+      lb.classList.add('active');
+      document.body.style.overflow='hidden';
+    });
+  });
+
+  function closeLb(){
+    lb.classList.remove('active');
+    document.body.style.overflow='';
+    lbImg.src='';
+  }
+
+  lbClose.addEventListener('click',closeLb);
+  lb.addEventListener('click',function(e){if(e.target===lb)closeLb();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLb();});
+})();
+</script>
+<script src="{% static 'js/pwa.js' %}"></script>
+</body>
+</html>

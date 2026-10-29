@@ -1,0 +1,137 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+
+    <title>Something Went Wrong | AI Data Analyzer</title>
+
+    <link rel="stylesheet"
+          href="{% static 'css/style.css' %}">
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #333;
+        }
+
+        .error-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .error-card {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            padding: 45px;
+            text-align: center;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .error-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .error-card h1 {
+            margin-bottom: 12px;
+            color: #111827;
+        }
+
+        .error-card p {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .home-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 22px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 7px;
+        }
+
+        .home-button:hover {
+            opacity: 0.85;
+        }
+
+    </style>
+
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DataAnalyzer">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192.png' %}">
+</head>
+
+<body>
+
+<div class="error-container">
+
+    <div class="error-card">
+
+        <div class="error-icon">
+            ⚠️
+        </div>
+
+        <h1>
+            Something Went Wrong
+        </h1>
+
+        <p>
+            We're sorry, but something unexpected happened.
+            Please try again later.
+        </p>
+
+        <a href="{% url 'dashboard' %}"
+           class="home-button">
+
+            ← Back to Dashboard
+
+        </a>
+
+    </div>
+
+</div>
+
+<script>
+(function(){
+    var toggle = document.getElementById('navToggle');
+    var mobile = document.getElementById('navMobile');
+    if(toggle && mobile){
+        toggle.addEventListener('click', function(){
+            mobile.classList.toggle('open');
+        });
+        document.addEventListener('click', function(e){
+            if(!toggle.contains(e.target) && !mobile.contains(e.target)){
+                mobile.classList.remove('open');
+            }
+        });
+    }
+})();
+</script>
+<script src="{% static 'js/pwa.js' %}"></script>
+</body>
+
+</html>
+

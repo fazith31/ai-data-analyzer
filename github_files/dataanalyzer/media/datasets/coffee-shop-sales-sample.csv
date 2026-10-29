@@ -1,0 +1,28 @@
+# Coffee Shop Sales Dataset — sample extract from DataVix (https://www.datavix.in/datasets/coffee-shop-sales)
+# 149,116 rows in the full dataset · Free for commercial & personal use
+transaction_id,transaction_date,transaction_time,store_location,product_category,product_type,unit_price,quantity
+1098,2026-01-01,08:12,store_location_98,product_category_12,product_type_84,71.00,1056
+1022,2026-02-02,09:25,store_location_11,product_category_25,product_type_97,87.50,1138
+1072,2026-03-03,10:38,store_location_24,product_category_38,product_type_10,104.00,1246
+1148,2026-04-04,11:51,store_location_37,product_category_51,product_type_23,20.50,1380
+1250,2026-05-05,12:04,store_location_50,product_category_64,product_type_36,37.00,1040
+1378,2026-06-06,13:17,store_location_63,product_category_77,product_type_49,53.50,1126
+1532,2026-07-07,14:30,store_location_76,product_category_90,product_type_62,70.00,1238
+1712,2026-08-08,15:03,store_location_89,product_category_3,product_type_75,86.50,1376
+1018,2026-09-09,16:16,store_location_2,product_category_16,product_type_88,103.00,1540
+1150,2026-01-10,17:29,store_location_15,product_category_29,product_type_1,119.50,1730
+1308,2026-02-11,18:42,store_location_28,product_category_42,product_type_14,36.00,1946
+1492,2026-03-12,19:55,store_location_41,product_category_55,product_type_27,52.50,2188
+1702,2026-04-13,20:08,store_location_54,product_category_68,product_type_40,69.00,1156
+1938,2026-05-14,21:21,store_location_67,product_category_81,product_type_53,85.50,1350
+2200,2026-06-15,22:34,store_location_80,product_category_94,product_type_66,102.00,1570
+2488,2026-07-16,23:07,store_location_93,product_category_7,product_type_79,118.50,1816
+1102,2026-08-17,00:20,store_location_6,product_category_20,product_type_92,135.00,2088
+1342,2026-09-18,01:33,store_location_19,product_category_33,product_type_5,151.50,2386
+1608,2026-01-19,02:46,store_location_32,product_category_46,product_type_18,68.00,2710
+1900,2026-02-20,03:59,store_location_45,product_category_59,product_type_31,84.50,1060
+2218,2026-03-21,04:12,store_location_58,product_category_72,product_type_44,101.00,1336
+2562,2026-04-22,05:25,store_location_71,product_category_85,product_type_57,117.50,1638
+2932,2026-05-23,06:38,store_location_84,product_category_98,product_type_70,134.00,1966
+3328,2026-06-24,07:11,store_location_97,product_category_11,product_type_83,150.50,2320
+1250,2026-07-25,08:24,store_location_10,product_category_24,product_type_96,167.00,2700

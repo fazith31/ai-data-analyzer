@@ -1,0 +1,265 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload Dataset — AI Data Analyzer</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+  .progress-section {
+    display: none;
+    margin-top: 20px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px;
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+  }
+  .progress-track {
+    width: 100%;
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #2563eb, #38bdf8);
+    border-radius: 999px;
+    transition: width 0.2s ease-out;
+  }
+  .progress-status {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+  }
+  .upload-btn-loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+</style>
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DataAnalyzer">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192.png' %}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">🤖 AI Data Analyzer</div>
+  <div class="nav-links">
+    <button type="button" class="pwa-install-btn" id="pwaInstallBtn" title="Install as App">📲 Install App</button>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <a href="{% url 'upload_dataset' %}" class="active">Upload</a>
+    <form method="POST" action="{% url 'logout' %}" style="display:inline;">{% csrf_token %}<button type="submit">Logout</button></form>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-mobile" id="navMobile">
+  <button type="button" class="pwa-install-btn mobile-pwa-btn" id="pwaInstallMobileBtn">📲 Install App</button>
+  <a href="{% url 'dashboard' %}">Dashboard</a>
+  <a href="{% url 'upload_dataset' %}">Upload</a>
+  <form method="POST" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Logout</button></form>
+</div>
+
+<div class="upload-container">
+  <div class="upload-card">
+    <h1>📤 Upload Dataset</h1>
+    <p class="upload-description">Upload your CSV or Excel dataset to start analyzing your business data with AI.</p>
+    
+    <div id="clientError" class="error-message" style="display:none;margin-bottom:16px;"></div>
+    {% if error %}<div class="error-message" id="serverError">⚠️ {{ error }}</div>{% endif %}
+
+    <form id="uploadForm" method="POST" enctype="multipart/form-data" action="{% url 'upload_dataset' %}">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="nameInput">Dataset Name</label>
+        <input type="text" id="nameInput" name="name" placeholder="e.g. Sales Q1 2024" required>
+      </div>
+
+      <div class="form-group">
+        <label for="fileInput">Select File</label>
+        <input type="file" id="fileInput" name="file" accept=".csv,.xlsx,.xls" required>
+        <div class="file-info">📁 Supported: CSV, XLSX, XLS &nbsp;|&nbsp; Max size: 10 MB</div>
+      </div>
+
+      <!-- Upload Progress Bar (Visible during XHR upload) -->
+      <div id="progressSection" class="progress-section">
+        <div class="progress-header">
+          <span id="progressFileLabel">Uploading file...</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-track">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <div class="progress-status">
+          <span id="progressBytes">0 MB / 0 MB</span>
+          <span id="progressState">Uploading...</span>
+        </div>
+      </div>
+
+      <button type="submit" id="submitBtn" class="upload-button" style="margin-top:20px;">📤 Upload Dataset</button>
+    </form>
+
+    <div style="margin-top:20px;">
+      <a href="{% url 'dashboard' %}" class="back-button">← Back to Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Mobile nav toggle
+  var t = document.getElementById('navToggle'), m = document.getElementById('navMobile');
+  if (t && m) {
+    t.addEventListener('click', function(){ m.classList.toggle('open'); });
+    document.addEventListener('click', function(e){
+      if (!t.contains(e.target) && !m.contains(e.target)) m.classList.remove('open');
+    });
+  }
+
+  // File selection display helper
+  var fileInput = document.getElementById('fileInput');
+  var nameInput = document.getElementById('nameInput');
+  if (fileInput && nameInput) {
+    fileInput.addEventListener('change', function(){
+      if (fileInput.files.length > 0 && !nameInput.value.trim()) {
+        var fname = fileInput.files[0].name.replace(/\.[^/.]+$/, "");
+        nameInput.value = fname;
+      }
+    });
+  }
+
+  // XHR Upload with Real Progress Bar
+  var form = document.getElementById('uploadForm');
+  var progressSection = document.getElementById('progressSection');
+  var progressFill = document.getElementById('progressFill');
+  var progressPercent = document.getElementById('progressPercent');
+  var progressBytes = document.getElementById('progressBytes');
+  var progressState = document.getElementById('progressState');
+  var progressFileLabel = document.getElementById('progressFileLabel');
+  var submitBtn = document.getElementById('submitBtn');
+  var clientError = document.getElementById('clientError');
+
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    var k = 1024, sizes = ['B', 'KB', 'MB', 'GB'];
+    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  if (form && window.XMLHttpRequest && window.FormData) {
+    form.addEventListener('submit', function(e) {
+      if (!fileInput.files || fileInput.files.length === 0) {
+        return; // allow normal browser validation
+      }
+
+      var file = fileInput.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        e.preventDefault();
+        clientError.textContent = '⚠️ File is too large. Maximum allowed size is 10 MB.';
+        clientError.style.display = 'block';
+        return;
+      }
+
+      e.preventDefault();
+      clientError.style.display = 'none';
+
+      // Setup UI for upload
+      progressSection.style.display = 'block';
+      progressFileLabel.textContent = 'Uploading ' + file.name;
+      progressFill.style.width = '0%';
+      progressPercent.textContent = '0%';
+      progressBytes.textContent = '0 MB / ' + formatBytes(file.size);
+      progressState.textContent = 'Uploading...';
+      submitBtn.classList.add('upload-btn-loading');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ Uploading...';
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', form.action || window.location.href, true);
+
+      xhr.upload.addEventListener('progress', function(event) {
+        if (event.lengthComputable) {
+          var percent = Math.min(100, Math.round((event.loaded / event.total) * 100));
+          progressFill.style.width = percent + '%';
+          progressPercent.textContent = percent + '%';
+          progressBytes.textContent = formatBytes(event.loaded) + ' / ' + formatBytes(event.total);
+          submitBtn.textContent = '⏳ Uploading... ' + percent + '%';
+          if (percent >= 100) {
+            progressState.textContent = 'Processing dataset on server...';
+            submitBtn.textContent = '⚙️ Processing...';
+          }
+        }
+      });
+
+      xhr.addEventListener('load', function() {
+        if (xhr.status >= 200 && xhr.status < 400) {
+          // Check if response redirected or returned HTML
+          progressFill.style.width = '100%';
+          progressPercent.textContent = '100%';
+          progressState.textContent = 'Done! Redirecting...';
+          
+          // If response contains an error message in HTML
+          var parser = new DOMParser();
+          var doc = parser.parseFromString(xhr.responseText, 'text/html');
+          var errElem = doc.querySelector('.error-message');
+          if (errElem && errElem.textContent.trim()) {
+            clientError.textContent = errElem.textContent.trim();
+            clientError.style.display = 'block';
+            progressSection.style.display = 'none';
+            submitBtn.classList.remove('upload-btn-loading');
+            submitBtn.disabled = false;
+            submitBtn.textContent = '📤 Upload Dataset';
+            return;
+          }
+
+          // Otherwise, upload succeeded, redirect to dashboard
+          window.location.href = "{% url 'dashboard' %}";
+        } else {
+          clientError.textContent = '⚠️ Upload failed (Status ' + xhr.status + '). Please try again.';
+          clientError.style.display = 'block';
+          progressSection.style.display = 'none';
+          submitBtn.classList.remove('upload-btn-loading');
+          submitBtn.disabled = false;
+          submitBtn.textContent = '📤 Upload Dataset';
+        }
+      });
+
+      xhr.addEventListener('error', function() {
+        clientError.textContent = '⚠️ Network error during upload. Please check your connection and try again.';
+        clientError.style.display = 'block';
+        progressSection.style.display = 'none';
+        submitBtn.classList.remove('upload-btn-loading');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '📤 Upload Dataset';
+      });
+
+      var formData = new FormData(form);
+      xhr.send(formData);
+    });
+  }
+})();
+</script>
+<script src="{% static 'js/pwa.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Data Analyzer</title>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="shortcut icon" href="/favicon.ico">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DataAnalyzer">
+<link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'icons/icon-192.png' %}">
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">🤖 AI Data Analyzer</div>
+  <div class="nav-links">
+    <button type="button" class="pwa-install-btn" id="pwaInstallBtn" title="Install as App">📲 Install App</button>
+    <a href="{% url 'home' %}">Home</a>
+    <a href="{% url 'login' %}">Login</a>
+    <a href="{% url 'register' %}">Register</a>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<div class="nav-mobile" id="navMobile">
+  <button type="button" class="pwa-install-btn mobile-pwa-btn" id="pwaInstallMobileBtn">📲 Install App</button>
+  <a href="{% url 'home' %}">Home</a>
+  <a href="{% url 'login' %}">Login</a>
+  <a href="{% url 'register' %}">Register</a>
+</div>
+
+<section class="hero">
+  <div class="hero-content">
+    <h1>Turn Your Data Into <span style="color:#60a5fa;">AI Insights</span></h1>
+    <p>Upload your business datasets and transform raw data into meaningful insights using powerful analytics and AI.</p>
+    <div class="hero-buttons">
+      <a href="{% url 'register' %}" class="primary-button">🚀 Get Started Free</a>
+      <a href="{% url 'login' %}" class="secondary-button" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.25);">Login →</a>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <h2>Powerful Analytics Tools</h2>
+  <p class="section-description">Everything you need to understand your business data.</p>
+  <div class="feature-grid">
+    <div class="feature-card"><div class="feature-icon">📊</div><h3>Data Analysis</h3><p>Analyze rows, columns, data types, missing values and statistics instantly.</p></div>
+    <div class="feature-card"><div class="feature-icon">📈</div><h3>Visual Charts</h3><p>Auto-generate bar, line, pie, histogram and scatter charts for any dataset.</p></div>
+    <div class="feature-card"><div class="feature-icon">🤖</div><h3>AI Insights</h3><p>Get intelligent business insights automatically generated from your data.</p></div>
+    <div class="feature-card"><div class="feature-icon">💬</div><h3>Ask AI</h3><p>Ask natural language questions about your dataset and get instant answers.</p></div>
+    <div class="feature-card"><div class="feature-icon">📄</div><h3>Business Reports</h3><p>Generate professional AI-powered business reports with one click.</p></div>
+    <div class="feature-card"><div class="feature-icon">🔐</div><h3>Secure & Private</h3><p>Your datasets are tied to your account and protected by authentication.</p></div>
+  </div>
+</section>
+
+<section class="how-it-works">
+  <h2>How It Works</h2>
+  <div class="steps">
+    <div class="step"><div class="step-number">1</div><h3>Create Account</h3><p>Register and securely access your analytics dashboard.</p></div>
+    <div class="step"><div class="step-number">2</div><h3>Upload Dataset</h3><p>Upload your CSV or Excel business dataset.</p></div>
+    <div class="step"><div class="step-number">3</div><h3>Analyze</h3><p>Explore statistics, charts and business metrics.</p></div>
+    <div class="step"><div class="step-number">4</div><h3>Get AI Insights</h3><p>Ask AI questions and generate business recommendations.</p></div>
+  </div>
+</section>
+
+<section class="cta">
+  <h2>Ready to Analyze Your Data?</h2>
+  <p>Start turning your business data into actionable insights today.</p>
+  <a href="{% url 'register' %}" class="primary-button">Start Analyzing Free</a>
+</section>
+
+<footer class="footer"><p>© 2026 AI Data Analyzer. All rights reserved.</p></footer>
+
+<script>
+(function(){
+  var t=document.getElementById('navToggle'),m=document.getElementById('navMobile');
+  if(t&&m){t.addEventListener('click',function(){m.classList.toggle('open');});document.addEventListener('click',function(e){if(!t.contains(e.target)&&!m.contains(e.target))m.classList.remove('open');});}
+})();
+</script>
+<script src="{% static 'js/pwa.js' %}"></script>
+</body>
+</html>
